@@ -6,7 +6,7 @@ Gimmicode is the contraction of "Give me Unicode". It's a small command-line uti
 
 ## Quick Use
 
-    $ git clone git@github.com:fmaquin/Gimmicode.git
+    $ git clone git@github.com:fmaquin/gimmicode.git
     $ cd Gimmicode/bin
     $ ./gimmicode of [-a] <character>
 
@@ -28,7 +28,7 @@ For instance:
 For a complete description of all the options available, you can type `gimmicode of -h`:
 
     -h, --help                       Show this message
-    -a, --all                        Display all codes
+    -a, --all                        Display all codes (similar to -wu)
     -w, --windows                    Display Windows alt codes
     -u, --utf8                       Display UTF-8 codes
     -d, --data DATAFILE              Check Unicode from the given file
