@@ -1,0 +1,150 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+require 'json'
+
+# ----- Defaults and global variables -----
+
+$current_directory = File.expand_path(File.dirname(File.dirname(__FILE__))).to_s + "/data"
+$usage = "Usage: #{__FILE__} [-hawu] [-d DATAFILE] <characters ...>"
+
+options = {}
+options[:data] = "#{$current_directory}/UnicodeData.json"
+
+# ----- Functions -----
+
+# Load a json file and turn it into a ruby hash.
+#
+# @param filename the json file to load
+def load_json(filename)
+  begin
+    File.open(filename, "r" ) do |f|
+      JSON.load(f)
+    end
+  rescue Errno::ENOENT, TypeError => e
+    puts "You must supply a valid filename: #{e.message}"
+    exit
+  end
+end
+
+# Return the unicode of the given character.
+#
+# @param character the character to get the unicode from
+def get_unicode_of(character)
+  character.unpack('U*').first.to_s(16).rjust(4, '0').upcase
+end
+
+# Return the UTF-8 code of the given character.
+#
+# @param character the character to get the code from
+def get_utf8_of(character)
+  character.unpack('H*').first.upcase
+end
+
+# Return the UTF-16BE hexadecimal code of the given character.
+#
+# @param character the character to get the code from
+def get_utf16_hex_of(character)
+  character.encode('UTF-16BE').unpack('H*').first.upcase
+end
+
+# Return the UTF-16BE decimal code of the given character.
+#
+# @param character the character to get the code from
+def get_utf16_dec_of(character)
+  get_utf16_hex_of(character).to_i(16).to_s.rjust(4, '0')
+end
+
+# Return windows alt codes for the given character
+# (based on UTF-16BE encoding)
+#
+# @param character the character to get the codes from
+def get_alt_codes_of(character)
+  ["+#{get_utf16_hex_of character}", "#{get_utf16_dec_of character}"]
+end
+
+# Parse command line input and set the given hash
+# with suitable values (e. g. --all = True)
+# 
+# @param options the hash storing suitable values
+def parse_arguments(options)
+  
+  begin
+    OptionParser.new do |opts|
+      opts.banner = $usage
+  
+      opts.separator "This little utility returns unicode"
+      opts.separator ""
+      opts.separator "Specific options:"
+
+      opts.on('-h', '--help', 'Show this message') do
+        puts opts
+        exit
+      end
+  
+      opts.on('-a', '--all', 'Display all codes (similar to -wu)') do |a|
+        options[:all] = a
+      end
+  
+      opts.on('-w', '--windows', 'Display Windows alt codes') do |w|
+        options[:windows] = w
+      end
+  
+      opts.on('-u', '--utf8', 'Display UTF-8 codes') do |u|
+        options[:utf8] = u
+      end
+  
+      opts.on('-d', '--data DATAFILE', 'Use unicode names stored in the given file') do |d|
+        options[:data] << d
+      end
+  
+    end.parse!
+  
+    options
+  rescue OptionParser::ParseError => e
+    puts e.message.capitalize
+    puts $usage
+    exit
+  end
+end
+
+
+# ----- Do what I said -----
+
+if ARGV.length == 0
+  puts $usage
+  exit
+end
+
+unicode_data = load_json options[:data]
+parse_arguments(options)
+
+ARGV.each do |character|
+  if character.length > 1
+    puts "You should only pass characters, not strings."
+    exit
+  else
+    hex_code_of_character = get_unicode_of character
+    unicode_number = unicode_data[hex_code_of_character]
+    
+    puts "U+#{hex_code_of_character}: #{unicode_number['unicode_new_name']} (#{unicode_number['unicode_old_name']})"
+    
+    if options[:all] || options[:utf8]
+      utf8_code = get_utf8_of character
+      puts "   UTF-8: \\x#{utf8_code}"
+    end
+    
+    if options[:all] || options[:windows]
+      utf16_codes = get_alt_codes_of character
+      print "   Windows Alt Code"
+      
+      utf16_codes.each_with_index do |code, index|
+        if index == 0
+          print ": Alt + #{code}\n"
+        else
+          puts "                     Alt + #{code}"
+        end
+      end
+    end
+  end
+end

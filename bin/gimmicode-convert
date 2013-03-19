@@ -1,0 +1,83 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+require 'json'
+
+# ----- Defaults and global variables -----
+
+$current_directory = File.expand_path(File.dirname(File.dirname(__FILE__))).to_s + "/data"
+$usage = "Usage: #{__FILE__} [-h] [-i UNICODEDATA] [-o UNICODEJSON]"
+
+options = {}
+options[:out] = "#{$current_directory}/UnicodeData.json"
+options[:in] = "#{$current_directory}/UnicodeData.txt"
+
+# ----- Functions -----
+
+# Parse command line input and set the given hash
+# with suitable values (e. g. -i = "Bidule.txt")
+# 
+# @param options the hash storing suitable values
+def parse_arguments(options)
+  begin
+    OptionParser.new do |opts|
+      opts.banner = $usage
+  
+      opts.separator ""
+      opts.separator "Specific options:"
+
+      opts.on('-h', '--help', 'Show this message') do
+        puts opts
+        exit
+      end
+    
+      opts.on('-i', '--in UNICODEDATA', 'Unicode.org UnicodeData file') do |i|
+        options[:in] = i
+      end
+    
+      opts.on('-o', '--out UNICODEJSON', 'Converted JSON file') do |o|
+        options[:out] = o
+      end
+    end.parse!
+  rescue OptionParser::ParseError => e
+    puts e.message.capitalize
+    puts $usage
+    exit
+  end
+end
+
+# ----- Do what I said -----
+
+parse_arguments options
+
+# Open Unicode.org data file
+print "Opening file..."
+begin
+  unicode_file = File.open(options[:in], 'r')
+  print " Done.\n"
+rescue Errno::ENOENT, TypeError => e
+  puts "You must supply a valid input file: #{e.message}"
+  exit
+end
+
+print "Translating data..."
+# Create hash from unicode data file
+unicode_data_hash = {}
+
+unicode_file.each do |line|
+  splitted_line = line.split(';')
+  unicode_data_hash[splitted_line[0]] = {unicode_new_name: splitted_line[1], unicode_old_name: splitted_line[10]}
+end
+print " Done.\n"
+
+print "Writing new file..."
+# Write Unicode data JSON file
+begin
+  File.open(options[:out],"w") do |f|
+    f.write(unicode_data_hash.to_json)
+  end
+  print " Done.\n"
+rescue Errno::ENOENT, TypeError => e
+  puts "You must supply a valid output file: #{e.message}"
+  exit
+end

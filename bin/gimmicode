@@ -1,0 +1,94 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+require 'ostruct'
+
+# ----- Global variables -----
+
+$current_directory = File.expand_path(File.dirname(__FILE__)).to_s
+$usage = "Usage: #{__FILE__} [-h] <of|convert>"
+
+# ----- Functions -----
+
+# Extract and strip command from given arguments
+#
+# @params arguments command-line arguments
+# @return extracted command
+def split_arguments!(arguments)
+  
+  if arguments.any? { |arg| arg.strip == 'of' }
+    command = arguments.delete('of')
+  elsif arguments.any? { |arg| arg.strip == 'convert' }
+    command = arguments.delete('convert')
+  end
+  
+  command
+end
+
+# Parse command line input and set the given hash
+# with suitable values (e. g. --help = True)
+# 
+# @param gimmicode_arguments the arguments to parse
+def parse_command_line(gimmicode_arguments)
+  begin
+    OptionParser.new do |opts|
+      opts.banner = $usage
+  
+      opts.separator ""
+      opts.separator "Specific options:"
+
+      opts.on('-h', '--help [COMMAND]', 'Show this message or the help of the given command') do |h|
+        if h == "of" or h == "convert"
+          exec("#{$current_directory}/gimmicode-#{h} -h")
+        else
+          puts opts
+          puts ""
+          puts "Commands:"
+          puts "    of\t\tGet the codes of the given characters"
+          puts "    convert\tConvert Unicode data readable by gimmicode of"
+          exit
+        end
+      end
+    end.parse!(gimmicode_arguments)
+  rescue OptionParser::ParseError => e
+    puts e.message.capitalize
+    puts $usage
+    exit
+  end
+end
+
+# Do what the user asked.
+# Check arguments and change the world!
+def do_as_i_said
+  if ARGV.length == 0
+    puts $usage
+    exit
+  elsif ARGV[0] == "-h"
+
+    arguments = ARGV.dup
+  
+    if arguments.length > 2
+      arguments.slice!(2..(arguments.length - 1))
+    end
+  
+    parse_command_line(arguments)
+  
+  else
+    arguments = ARGV.dup
+    command = split_arguments! arguments
+  
+    # Prevent space character from being considered as a separator.
+    arguments.map! do |arg|
+      if arg == " "
+        '" "'
+      else
+        arg
+      end
+    end
+  
+    exec("#{$current_directory}/gimmicode-#{command} #{arguments.join(" ")}")
+  end
+end
+
+# Hey gimmicode,
+do_as_i_said
