@@ -6,7 +6,9 @@ Gimmicode is the contraction of "Give me Unicode". It's a small command-line uti
 
 ## Quick Use
 
-    gimmicode of [-a] <character>
+    $ git clone git@github.com:fmaquin/Gimmicode.git
+    $ cd Gimmicode/bin
+    $ ./gimmicode of [-a] <character>
 
 You may need to escape characters or surround them with quotes.
 
@@ -20,7 +22,7 @@ Gimmicode ship with two commands, `of` and `convert`.
 
 For instance:
 
-    gimmi@test ~ $ gimmicode of "G"
+    $ ./gimmicode of "G"
     U+0047: LATIN CAPITAL LETTER G ()
 
 For a complete description of all the options available, you can type `gimmicode of -h`:
@@ -39,12 +41,12 @@ For each code point, the `convert` command retrieve the current name as well as 
 This JSON file follows this convention:
 
 
-     {
-         "00A0": {"unicode_new_name": "NO-BREAK SPACE",
-                  "unicode_old_name": "NON-BREAKING SPACE"},
-         
-         ...
-     }
+    {
+        "00A0": {"unicode_new_name": "NO-BREAK SPACE",
+                 "unicode_old_name": "NON-BREAKING SPACE"},
+        
+        ...
+    }
 
 For a complete description of all the options available, you can type `gimmicode convert -h`:
 
