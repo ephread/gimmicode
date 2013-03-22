@@ -41,26 +41,40 @@ def get_utf8_of(character)
   character.unpack('H*').first.upcase
 end
 
-# Return the UTF-16BE hexadecimal code of the given character.
+# Return the DOS Code Page 850 code of the given character.
 #
 # @param character the character to get the code from
-def get_utf16_hex_of(character)
+def get_cp850_of(character)
+  begin
+    character.encode('CP850').unpack('H*').first.to_i(16).to_s
+  rescue Encoding::InvalidByteSequenceError, Encoding::UndefinedConversionError
+    ""
+  end
+end
+
+# Return the Windows 1252 code of the given character.
+#
+# @param character the character to get the code from
+def get_windows_1252_of(character)
+  begin
+    "0" + character.encode('Windows-1252').unpack('H*').first.to_i(16).to_s
+  rescue Encoding::InvalidByteSequenceError, Encoding::UndefinedConversionError
+    ""
+  end
+end
+
+# Return the UTF-16 Big Endian hexadecimal code of the given character.
+#
+# @param character the character to get the code from
+def get_utf16_of(character)
   character.encode('UTF-16BE').unpack('H*').first.upcase
 end
 
-# Return the UTF-16BE decimal code of the given character.
-#
-# @param character the character to get the code from
-def get_utf16_dec_of(character)
-  get_utf16_hex_of(character).to_i(16).to_s.rjust(4, '0')
-end
-
 # Return windows alt codes for the given character
-# (based on UTF-16BE encoding)
 #
 # @param character the character to get the codes from
 def get_alt_codes_of(character)
-  ["+#{get_utf16_hex_of character}", "#{get_utf16_dec_of character}"]
+  ["+#{get_utf16_of character}", "#{get_cp850_of character}", "#{get_windows_1252_of character}"].reject(&:empty?)
 end
 
 # Parse command line input and set the given hash
